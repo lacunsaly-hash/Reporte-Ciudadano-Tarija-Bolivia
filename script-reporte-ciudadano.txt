@@ -1,0 +1,76 @@
+(() => {
+  'use strict';
+  const KEY = 'reporteCiudadano.reportes.v2';
+  const WHATSAPP = '59172981122';
+  const $ = (s, root = document) => root.querySelector(s);
+  const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+  const safe = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const read = () => { try { const v = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+  const save = list => localStorage.setItem(KEY, JSON.stringify(list));
+  const code = () => { let c; const reports = read(); do { c = 'RC-' + Math.random().toString(36).slice(2,8).toUpperCase(); } while (reports.some(r => r.code === c)); return c; };
+  const dialog = $('#reportDialog'), form = $('#reportForm'), success = $('#successPanel');
+  if (!dialog || !form || !success) { console.error('Reporte Ciudadano: falta el formulario en index.html.'); return; }
+  const openForm = category => {
+    form.hidden = false; success.hidden = true; $('#formMessage').textContent = '';
+    if (category) $('#category').value = category;
+    if (typeof dialog.showModal === 'function') { if (!dialog.open) dialog.showModal(); }
+    else dialog.setAttribute('open', 'open');
+    setTimeout(() => (category ? $('#description') : $('#citizenName')).focus(), 30);
+  };
+  $$('[data-open-form]').forEach(el => el.addEventListener('click', () => openForm()));
+  $$('[data-category]').forEach(el => el.addEventListener('click', () => openForm(el.dataset.category)));
+  $('#closeDialog')?.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+
+  const menuButton = $('#menuToggle'), nav = $('#mainNav');
+  menuButton?.addEventListener('click', () => { const open = nav.classList.toggle('open'); menuButton.setAttribute('aria-expanded', String(open)); const sr = menuButton.querySelector('.sr-only'); if (sr) sr.textContent = open ? 'Cerrar menú' : 'Abrir menú'; });
+  $$('#mainNav a, #mainNav button').forEach(el => el.addEventListener('click', () => { nav.classList.remove('open'); menuButton?.setAttribute('aria-expanded','false'); }));
+  $('#photo')?.addEventListener('change', e => { $('#photoName').textContent = e.target.files?.[0] ? `Archivo elegido: ${e.target.files[0].name}. No se enviará automáticamente.` : 'Puedes elegir una imagen como referencia. No se sube a un servidor.'; });
+  $('#useLocation')?.addEventListener('click', () => {
+    const hint = $('#locationHint');
+    if (!navigator.geolocation) { hint.textContent = 'No se admite GPS en este navegador. Escribe la ubicación manualmente.'; return; }
+    hint.textContent = 'Solicitando permiso de ubicación…';
+    navigator.geolocation.getCurrentPosition(p => { const coords = `GPS: ${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`; const input = $('#location'); input.value = input.value.trim() ? `${input.value.trim()} (${coords})` : coords; hint.textContent = 'Ubicación añadida.'; }, () => { hint.textContent = 'No se pudo obtener la ubicación. Escribe la ubicación manualmente.'; }, {timeout:10000, maximumAge:60000});
+  });
+  const actionInfo = [
+    ['Reporta lo que ves','Describe el problema con respeto y claridad. Incluye una ubicación para identificarlo.'],
+    ['Aporta evidencia','Puedes elegir una foto, pero esta versión no la sube a ningún servidor.'],
+    ['Participa en comunidad','Comparte información útil y evita incluir datos privados de otras personas.'],
+    ['Haz seguimiento','Introduce el código del reporte en la sección de seguimiento de este mismo navegador.']
+  ];
+  $$('.action-option').forEach(btn => btn.addEventListener('click', () => {
+    $$('.action-option').forEach(b => b.classList.toggle('active', b === btn));
+    const idx = Number(btn.dataset.action), info = actionInfo[idx] || actionInfo[0];
+    $('#actionTitle').textContent = info[0]; $('#actionDescription').textContent = info[1];
+    const action = $('#actionButton'); action.textContent = idx === 3 ? 'Consultar seguimiento →' : 'Crear un reporte →';
+    action.onclick = idx === 3 ? () => $('#seguimiento').scrollIntoView({behavior:'smooth'}) : () => openForm();
+  }));
+
+  form.addEventListener('submit', e => {
+    e.preventDefault(); const message = $('#formMessage'); message.textContent = '';
+    if (!form.reportValidity()) return;
+    const name = $('#citizenName').value.trim(), phone = $('#citizenPhone').value.trim(), category = $('#category').value, description = $('#description').value.trim(), location = $('#location').value.trim();
+    if (!name || !category || !description || !location) { message.textContent = 'Completa todos los campos obligatorios.'; return; }
+    const reports = read(); const duplicate = reports.find(r => r.category === category && r.location.toLowerCase() === location.toLowerCase());
+    if (duplicate && !confirm(`Ya hay un reporte en esa ubicación (${duplicate.code}). ¿Registrar otro?`)) return;
+    const id = code(), now = new Date();
+    const report = {code:id,name,phone,category,description,location,createdAt:now.toISOString(),createdLabel:now.toLocaleString('es-BO'),status:'Recibido'};
+    try { reports.unshift(report); save(reports); } catch (err) { message.textContent = 'El navegador no permitió guardar. Prueba abrir la carpeta en Chrome y revisa la configuración de privacidad.'; return; }
+    $('#successCode').textContent = id; $('#successText').textContent = `Gracias, ${name}. El reporte se guardó en este navegador.`;
+    const waText = ['NUEVO REPORTE CIUDADANO',`Código: ${id}`,`Nombre: ${name}`,`Teléfono: ${phone || 'No indicado'}`,`Categoría: ${category}`,`Descripción: ${description}`,`Ubicación: ${location}`,`Fecha: ${report.createdLabel}`].join('\n');
+    $('#sendWhatsApp').href = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(waText)}`;
+    $('#whatsappStatus').textContent = 'El reporte se guardó localmente. Pulsa “Enviar por WhatsApp” y luego “Enviar” dentro de WhatsApp para remitirlo al 72981122.';
+    form.hidden = true; success.hidden = false; $('#trackingCode').value = id; showReport(report);
+  });
+  $('#copyCode')?.addEventListener('click', async () => { const value = $('#successCode').textContent; try { await navigator.clipboard.writeText(value); } catch { const t = document.createElement('textarea'); t.value = value; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); } $('#copyCode').textContent = '¡Copiado!'; });
+  const reset = () => { form.reset(); $('#formMessage').textContent = ''; $('#photoName').textContent = 'Puedes elegir una imagen como referencia. No se sube a un servidor.'; $('#locationHint').textContent = 'También puedes escribir la ubicación manualmente.'; success.hidden = true; form.hidden = false; $('#copyCode').textContent = 'Copiar código'; };
+  $('#finishSuccess')?.addEventListener('click', () => { reset(); dialog.close(); });
+  $('#newReportButton')?.addEventListener('click', () => { reset(); $('#category').value = ''; $('#citizenName').focus(); });
+  dialog.addEventListener('close', reset);
+  function showReport(r) { const states=['Recibido','En revisión','En proceso','Atendido','Resuelto'], idx=Math.max(0,states.indexOf(r.status)), pct=Math.round((idx+1)/states.length*100); $('#trackingResult').innerHTML=`<div class="result-top"><span class="eyebrow">REPORTE ${safe(r.code)}</span><span class="state-pill">${safe(r.status)}</span></div><h3>${safe(r.category)}</h3><p>${safe(r.description)}</p><div class="result-meta"><div><span>Ubicación</span><strong>${safe(r.location)}</strong></div><div><span>Fecha de registro</span><strong>${safe(r.createdLabel || r.createdAt)}</strong></div><div><span>Nombre</span><strong>${safe(r.name)}</strong></div><div><span>Código</span><strong>${safe(r.code)}</strong></div></div><span class="eyebrow">PROGRESO LOCAL</span><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div><p class="progress-label">${pct}% · Estado local: ${safe(r.status)}. No es una actualización institucional.</p>`; }
+  const lookup = () => { const value=$('#trackingCode').value.trim().toUpperCase(); if (!value) { $('#trackingResult').innerHTML='<div class="empty-state-icon">⌨️</div><h3>Introduce tu código</h3><p>Escribe el código que recibiste al registrar el reporte.</p>'; return; } const r=read().find(x=>x.code.toUpperCase()===value); if (r) showReport(r); else $('#trackingResult').innerHTML='<div class="empty-state-icon">🔎</div><h3>No encontramos ese código</h3><p>Comprueba el código y que estés usando el mismo navegador donde registraste el reporte.</p>'; };
+  $('#lookupButton')?.addEventListener('click', lookup); $('#trackingCode')?.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();lookup();} });
+  $('#privacyLink')?.addEventListener('click', e => { e.preventDefault(); const d=$('#privacyDialog'); if(typeof d.showModal==='function') d.showModal(); else d.setAttribute('open','open'); });
+  $('#closePrivacy')?.addEventListener('click', () => $('#privacyDialog').close()); $('#privacyOkay')?.addEventListener('click', () => $('#privacyDialog').close());
+  $('#year').textContent = new Date().getFullYear();
+})();
