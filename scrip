@@ -1,0 +1,221 @@
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'reporteCiudadano.reportes.v1';
+  const WHATSAPP_NUMBER = '59172981122';
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const reportDialog = $('#reportDialog');
+  const reportForm = $('#reportForm');
+  const successPanel = $('#successPanel');
+
+  const readReports = () => {
+    try {
+      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(value) ? value : [];
+    } catch (error) { return []; }
+  };
+  const saveReports = reports => localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+  const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const createCode = () => {
+    const reports = readReports();
+    let code;
+    do { code = 'RC-' + Math.random().toString(36).slice(2, 8).toUpperCase(); }
+    while (reports.some(report => report.code === code));
+    return code;
+  };
+  const showForm = category => {
+    reportForm.hidden = false;
+    successPanel.hidden = true;
+    $('#formMessage').textContent = '';
+    if (category) $('#category').value = category;
+    if (typeof reportDialog.showModal === 'function') reportDialog.showModal();
+    else reportDialog.setAttribute('open', '');
+    setTimeout(() => (category ? $('#description') : $('#citizenName')).focus(), 50);
+  };
+  $$('[data-open-form]').forEach(button => button.addEventListener('click', () => showForm()));
+  $$('[data-category]').forEach(button => button.addEventListener('click', () => showForm(button.dataset.category)));
+  $('#closeDialog').addEventListener('click', () => reportDialog.close());
+  reportDialog.addEventListener('click', event => { if (event.target === reportDialog) reportDialog.close(); });
+
+  const menuToggle = $('#menuToggle');
+  const mainNav = $('#mainNav');
+  menuToggle.addEventListener('click', () => {
+    const open = mainNav.classList.toggle('open');
+    menuToggle.setAttribute('aria-expanded', String(open));
+    menuToggle.querySelector('.sr-only').textContent = open ? 'Cerrar menÃº' : 'Abrir menÃº';
+  });
+  $$('#mainNav a, #mainNav button').forEach(item => item.addEventListener('click', () => {
+    mainNav.classList.remove('open'); menuToggle.setAttribute('aria-expanded', 'false');
+  }));
+
+  $('#photo').addEventListener('change', event => {
+    const file = event.target.files[0];
+    $('#photoName').textContent = file ? `Archivo elegido: ${file.name}. No se subirÃ¡ automÃ¡ticamente.` : 'Puedes elegir una imagen como referencia. No se sube a un servidor.';
+  });
+  $('#useLocation').addEventListener('click', () => {
+    const hint = $('#locationHint');
+    if (!navigator.geolocation) { hint.textContent = 'Tu navegador no admite geolocalizaciÃ³n. Escribe la ubicaciÃ³n manualmente.'; return; }
+    hint.textContent = 'Solicitando permiso de ubicaciÃ³nâ€¦';
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude.toFixed(6);
+      const lon = position.coords.longitude.toFixed(6);
+      const current = $('#location').value.trim();
+      $('#location').value = current ? `${current} (GPS: ${lat}, ${lon})` : `GPS: ${lat}, ${lon}`;
+      hint.textContent = 'Coordenadas aÃ±adidas. Si lo deseas, agrega una referencia cercana.';
+    }, () => {
+      hint.textContent = 'No se pudo obtener la ubicaciÃ³n. Puedes escribirla manualmente.';
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  });
+
+  const categoryActions = [
+    ['Reporta lo que ves', 'Describe el problema con respeto y claridad. Incluye una ubicaciÃ³n para que pueda identificarse.'],
+    ['Aporta evidencia', 'Si tienes una fotografÃ­a, puedes seleccionarla como referencia. En este prototipo la imagen permanece en tu dispositivo y no se envÃ­a al servidor.'],
+    ['Participa en comunidad', 'Comparte informaciÃ³n Ãºtil y evita incluir datos privados de otras personas. Los reportes responsables ayudan a comprender mejor el problema.'],
+    ['Haz seguimiento', 'Guarda tu cÃ³digo de seguimiento y Ãºsalo en la secciÃ³n de consulta para revisar el registro almacenado en este navegador.']
+  ];
+  $$('.action-option').forEach(button => button.addEventListener('click', () => {
+    $$('.action-option').forEach(item => item.classList.toggle('active', item === button));
+    const [title, description] = categoryActions[Number(button.dataset.action)];
+    $('#actionTitle').textContent = title;
+    $('#actionDescription').textContent = description;
+    $('#actionButton').textContent = Number(button.dataset.action) === 3 ? 'Consultar seguimiento â†’' : 'Crear un reporte â†’';
+    $('#actionButton').onclick = Number(button.dataset.action) === 3
+      ? () => $('#seguimiento').scrollIntoView({ behavior: 'smooth' })
+      : () => showForm();
+  }));
+
+  const duplicateFor = (category, location) => readReports().find(report =>
+    report.category.toLocaleLowerCase() === category.toLocaleLowerCase() &&
+    report.location.toLocaleLowerCase() === location.toLocaleLowerCase()
+  );
+  reportForm.addEventListener('submit', event => {
+    event.preventDefault();
+    $('#formMessage').textContent = '';
+    if (!reportForm.reportValidity()) return;
+    const name = $('#citizenName').value.trim();
+    const phone = $('#citizenPhone').value.trim();
+    const category = $('#category').value;
+    const description = $('#description').value.trim();
+    const location = $('#location').value.trim();
+    if (!name || !category || !description || !location) {
+      $('#formMessage').textContent = 'Completa los campos obligatorios antes de continuar.';
+      return;
+    }
+    const duplicate = duplicateFor(category, location);
+    if (duplicate && !window.confirm(`Ya existe un reporte local de ${category} en esa ubicaciÃ³n (cÃ³digo ${duplicate.code}). Â¿Deseas registrar otro de todas formas?`)) return;
+    if (!window.confirm('Â¿Confirmas que deseas guardar este reporte? Se almacenarÃ¡ en este navegador.')) return;
+
+    const code = createCode();
+    const now = new Date();
+    const report = { code, name, phone, category, description, location, createdAt: now.toISOString(), createdLabel: now.toLocaleString('es-BO'), status: 'Recibido' };
+    try {
+      const reports = readReports();
+      reports.unshift(report);
+      saveReports(reports);
+    } catch (error) {
+      $('#formMessage').textContent = 'No se pudo guardar en este navegador. Revisa el espacio disponible o la configuraciÃ³n de privacidad.';
+      return;
+    }
+    $('#successCode').textContent = code;
+    $('#successText').textContent = `Gracias, ${name}. Tu reporte quedÃ³ registrado localmente con el estado â€œRecibidoâ€.`;
+
+    // Preparar un mensaje con los datos del reporte para el WhatsApp de destino.
+    const whatsappMessage = [
+      'NUEVO REPORTE CIUDADANO',
+      `CÃ³digo: ${code}`,
+      `Nombre: ${name}`,
+      `TelÃ©fono de contacto: ${phone || 'No indicado'}`,
+      `CategorÃ­a: ${category}`,
+      `DescripciÃ³n: ${description}`,
+      `UbicaciÃ³n: ${location}`,
+      `Fecha: ${report.createdLabel}`
+    ].join('\n');
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+    const sendWhatsApp = $('#sendWhatsApp');
+    sendWhatsApp.href = whatsappUrl;
+    sendWhatsApp.setAttribute('aria-label', 'Abrir WhatsApp con los datos del reporte para enviarlo al 72981122');
+    $('#whatsappStatus').textContent = 'Tu reporte estÃ¡ confirmado en este navegador. Estamos intentando abrir WhatsApp con los datos preparados; si no se abre automÃ¡ticamente, pulsa â€œEnviar por WhatsAppâ€. En WhatsApp debes tocar Enviar para remitir el mensaje.';
+    reportForm.hidden = true;
+    successPanel.hidden = false;
+    $('#trackingCode').value = code;
+    renderReport(report);
+
+    // Intento automÃ¡tico; el botÃ³n de respaldo funciona si el navegador bloquea la ventana emergente.
+    try { window.open(whatsappUrl, '_blank'); } catch (error) { /* El enlace visible queda disponible como alternativa. */ }
+  });
+
+  $('#copyCode').addEventListener('click', async () => {
+    const code = $('#successCode').textContent;
+    try {
+      await navigator.clipboard.writeText(code);
+      $('#copyCode').textContent = 'Â¡Copiado!';
+    } catch (error) {
+      const helper = document.createElement('textarea'); helper.value = code; document.body.appendChild(helper);
+      helper.select(); document.execCommand('copy'); helper.remove(); $('#copyCode').textContent = 'Â¡Copiado!';
+    }
+  });
+  const resetReportForm = () => {
+    reportForm.reset();
+    $('#formMessage').textContent = '';
+    $('#photoName').textContent = 'Puedes elegir una imagen como referencia. No se sube a un servidor.';
+    $('#locationHint').textContent = 'TambiÃ©n puedes escribir la ubicaciÃ³n manualmente.';
+    $('#copyCode').textContent = 'Copiar cÃ³digo';
+    successPanel.hidden = true;
+    reportForm.hidden = false;
+  };
+  $('#finishSuccess').addEventListener('click', () => {
+    resetReportForm();
+    if (reportDialog.open) reportDialog.close();
+  });
+  $('#newReportButton').addEventListener('click', () => {
+    resetReportForm();
+    $('#category').value = '';
+    $('#citizenName').focus();
+  });
+  reportDialog.addEventListener('close', () => {
+    $('#copyCode').textContent = 'Copiar cÃ³digo';
+    resetReportForm();
+  });
+  $('#lookupButton').addEventListener('click', () => {
+    const code = $('#trackingCode').value.trim().toUpperCase();
+    if (!code) { $('#trackingResult').innerHTML = '<div class="empty-state-icon">âŒ¨ï¸</div><h3>Introduce tu cÃ³digo</h3><p>Escribe el cÃ³digo que recibiste al registrar el reporte.</p>'; return; }
+    const report = readReports().find(item => item.code.toUpperCase() === code);
+    if (!report) {
+      $('#trackingResult').innerHTML = `<div class="empty-state-icon">ðŸ”Ž</div><h3>No encontramos ese cÃ³digo</h3><p>Verifica que estÃ© bien escrito y que el reporte se haya registrado en este mismo navegador. <button class="button button-outline" id="newReportFromLookup" type="button">Registrar un reporte</button></p>`;
+      $('#newReportFromLookup').addEventListener('click', () => showForm());
+      return;
+    }
+    renderReport(report);
+  });
+  $('#trackingCode').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); $('#lookupButton').click(); } });
+
+  function renderReport(report) {
+    const states = ['Recibido', 'En revisiÃ³n', 'En proceso', 'Atendido', 'Resuelto'];
+    const index = Math.max(0, states.indexOf(report.status));
+    const progress = Math.round(((index + 1) / states.length) * 100);
+    $('#trackingResult').innerHTML = `
+      <div class="result-top"><span class="eyebrow">REPORTE ${escapeHTML(report.code)}</span><span class="state-pill">${escapeHTML(report.status)}</span></div>
+      <h3>${escapeHTML(report.category)}</h3>
+      <p>${escapeHTML(report.description)}</p>
+      <div class="result-meta">
+        <div><span>UbicaciÃ³n</span><strong>${escapeHTML(report.location)}</strong></div>
+        <div><span>Fecha de registro</span><strong>${escapeHTML(report.createdLabel || new Date(report.createdAt).toLocaleString('es-BO'))}</strong></div>
+        <div><span>Nombre</span><strong>${escapeHTML(report.name)}</strong></div>
+        <div><span>CÃ³digo</span><strong>${escapeHTML(report.code)}</strong></div>
+      </div>
+      <span class="eyebrow">PROGRESO LOCAL</span><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <p class="progress-label">${progress}% Â· Estado guardado: ${escapeHTML(report.status)}. No representa una actualizaciÃ³n institucional.</p>`;
+  }
+
+  $('#privacyLink').addEventListener('click', event => {
+    event.preventDefault();
+    const dialog = $('#privacyDialog');
+    if (dialog.showModal) dialog.showModal(); else dialog.setAttribute('open', '');
+  });
+  $('#closePrivacy').addEventListener('click', () => $('#privacyDialog').close());
+  $('#privacyOkay').addEventListener('click', () => $('#privacyDialog').close());
+  $('#year').textContent = new Date().getFullYear();
+
+  // El nÃºmero se normaliza a formato internacional boliviano para el enlace de WhatsApp.
+  // La versiÃ³n frontend no puede enviar mensajes automÃ¡ticamente sin backend/API autorizada.
+})();
