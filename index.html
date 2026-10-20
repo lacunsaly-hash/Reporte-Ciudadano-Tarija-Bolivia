@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1456a0">
+  <meta name="description" content="Reporte Ciudadano: un prototipo para registrar y consultar problemas urbanos.">
+  <title>Reporte Ciudadano | Tu ciudad, tu voz</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#inicio">Saltar al contenido</a>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a class="brand" href="#inicio" aria-label="Reporte Ciudadano, ir al inicio">
+        <svg class="brand-logo" viewBox="0 0 64 64" role="img" aria-label="Logo de lupa y edificios">
+          <circle cx="27" cy="26" r="19" fill="#e8f4ff" stroke="#1765ad" stroke-width="5"/>
+          <path d="M40 40 55 55" stroke="#2c9b65" stroke-width="7" stroke-linecap="round"/>
+          <path d="M14 35V25h7v10M23 35V17h8v18M33 35V23h7v12" fill="#2c9b65" stroke="#1765ad" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <span>Reporte <strong>Ciudadano</strong></span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mainNav">☰</button>
+      <nav id="mainNav" class="main-nav" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a><a href="#como-funciona">Cómo funciona</a>
+        <a href="#problemas">Tipos de problemas</a><a href="#mejorar">Mejorar la ciudad</a>
+        <a href="#seguimiento">Seguimiento</a>
+        <button class="btn btn-small" data-open-report>Reportar un problema</button>
+        <a class="contact-link" href="https://wa.me/59172981122?text=Hola%2C%20quiero%20obtener%20informaci%C3%B3n%20sobre%20Reporte%20Ciudadano." target="_blank" rel="noopener">Contacto</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="prototype-strip"><span class="dot"></span> Prototipo: los reportes se guardan en este navegador. Puedes enviarlos por WhatsApp al contacto ciudadano.</div>
+
+  <main>
+    <section class="hero section" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">PARTICIPACIÓN CIUDADANA</p>
+          <h1>Tu ciudad, tu voz, <span>tu cambio.</span></h1>
+          <p class="hero-lead">Una forma sencilla de informar sobre problemas urbanos y facilitar la comunicación entre los ciudadanos y las instituciones responsables.</p>
+          <p>Cada reporte puede ayudar a organizar la información y visibilizar aquello que necesita atención en tu barrio.</p>
+          <div class="hero-actions"><button class="btn" data-open-report>＋ Reportar un problema</button><a class="btn btn-outline" href="#como-funciona">Cómo funciona <span aria-hidden="true">↓</span></a></div>
+          <div class="hero-note"><span class="check-icon">✓</span> Fácil de usar · Accesible desde celular o computadora</div>
+        </div>
+        <div class="city-art city-photo" role="img" aria-label="Vista fotográfica de una ciudad entre montañas">
+          <img class="city-photo-img" src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=85" alt="Vista urbana con edificios y calles" loading="eager">
+          <div class="photo-caption"><span class="photo-caption-dot"></span><span>Una ciudad mejor empieza en comunidad</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trust-row"><div class="container trust-items"><div><span>01</span><p>Informa sobre problemas</p></div><div><span>02</span><p>Guarda un código único</p></div><div><span>03</span><p>Consulta el seguimiento</p></div></div><p class="participation-note">Tu participación cuenta: reportar ayuda a visibilizar lo que necesita atención en tu barrio.</p></section>
+
+    <section class="section soft-section" id="problemas">
+      <div class="container">
+        <div class="section-heading"><p class="eyebrow">¿QUÉ PODEMOS MEJORAR?</p><h2>Problemas que puedes reportar</h2><p>Selecciona una categoría para iniciar tu reporte con el tipo de problema ya elegido.</p></div>
+        <div class="problem-grid" id="problemGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" id="como-funciona">
+      <div class="container">
+        <div class="section-heading"><p class="eyebrow">SENCILLO Y TRANSPARENTE</p><h2>¿Cómo funciona?</h2><p>Cuatro pasos para registrar y consultar la información.</p></div>
+        <div class="steps-grid">
+          <article class="step-card"><span class="step-number">1</span><div class="step-icon">⌕</div><h3>Identifica</h3><p>Encuentra un problema urbano en tu barrio o comunidad.</p></article>
+          <article class="step-card"><span class="step-number">2</span><div class="step-icon">✎</div><h3>Registra</h3><p>Describe lo que ocurre e indica la ubicación con claridad.</p></article>
+          <article class="step-card"><span class="step-number">3</span><div class="step-icon">✓</div><h3>Recibe tu código</h3><p>Guarda el código único para volver a consultar el reporte.</p></article>
+          <article class="step-card"><span class="step-number">4</span><div class="step-icon">↗</div><h3>Haz seguimiento</h3><p>Consulta el estado guardado y revisa su progreso.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft-section" id="mejorar">
+      <div class="container">
+        <div class="section-heading"><p class="eyebrow">UNA CIUDAD MEJOR SE CONSTRUYE EN EQUIPO</p><h2>Pequeñas acciones generan grandes cambios.</h2><p>Elige una acción para descubrir cómo puedes colaborar.</p></div>
+        <div class="action-grid" id="actionGrid"></div>
+        <div class="action-detail" id="actionDetail" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section tracking-section" id="seguimiento">
+      <div class="container tracking-layout">
+        <div class="tracking-intro"><p class="eyebrow">INFORMACIÓN A TU ALCANCE</p><h2>Seguimiento de reportes</h2><p>Introduce el código que recibiste al registrar tu reporte. También puedes elegir uno de tus reportes guardados en este navegador.</p>
+          <div class="local-warning"><strong>Importante:</strong> Los estados guardados en este navegador son demostrativos. Las actualizaciones institucionales reales requieren una base de datos y un sistema institucional conectado.</div>
+        </div>
+        <div class="tracking-box">
+          <form id="trackingForm" class="tracking-form">
+            <label for="trackingCode">Código de seguimiento</label>
+            <div class="tracking-input-row"><input id="trackingCode" name="trackingCode" placeholder="Ej. RC-20261019-AB12" autocomplete="off"><button class="btn" type="submit">Consultar reporte</button></div>
+            <p class="field-hint" id="trackingMessage" aria-live="polite"></p>
+          </form>
+          <div id="trackingResult"></div>
+        </div>
+      </div>
+      <div class="container my-reports-wrap"><div class="my-reports-title"><h3>Mis reportes</h3><span class="muted">Guardados en este navegador</span></div><div id="myReports" class="my-reports"></div></div>
+    </section>
+
+    <section class="section" id="perfil">
+      <div class="container profile-layout">
+        <div><p class="eyebrow">MÁS RÁPIDO LA PRÓXIMA VEZ</p><h2>Tu perfil local</h2><p>Guarda tus datos para completar más rápido futuros reportes. No necesitas crear una contraseña.</p><p class="local-warning">Este perfil es local, no es una cuenta institucional y no se sincroniza entre dispositivos.</p></div>
+        <form id="profileForm" class="profile-form">
+          <label for="profileName">Nombre completo <span class="required">*</span></label><input id="profileName" required maxlength="100" autocomplete="name">
+          <label for="profilePhone">Teléfono (opcional)</label><input id="profilePhone" maxlength="30" autocomplete="tel" inputmode="tel">
+          <label for="profileEmail">Correo electrónico (opcional)</label><input id="profileEmail" type="email" maxlength="120" autocomplete="email">
+          <div class="profile-actions"><button class="btn" type="submit">Guardar perfil</button><button class="btn btn-quiet" id="deleteProfile" type="button">Borrar perfil</button></div>
+          <p id="profileMessage" class="field-hint" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="section soft-section" id="modelo">
+      <div class="container info-grid">
+        <article><div class="info-symbol">⌂</div><h2>Conexión con instituciones</h2><p>Según la competencia de cada entidad y mediante acuerdos, los reportes podrían derivarse a las instituciones responsables. Este prototipo todavía no realiza esa derivación automáticamente.</p><p>Para recibir reportes y actualizar sus estados en tiempo real, sería necesario conectar la plataforma a una base de datos y a un sistema institucional.</p></article>
+        <article><div class="info-symbol">↗</div><h2>Un servicio sostenible</h2><p>El reporte ciudadano básico seguiría siendo gratuito. Una implementación futura podría financiarse mediante licencias para gobiernos municipales, personalización, paneles administrativos, estadísticas agregadas, soporte técnico y mantenimiento.</p></article>
+      </div>
+      <div class="container benefits-block"><div class="section-heading"><p class="eyebrow">BENEFICIOS ESPERADOS</p><h2>¿Qué podría aportar?</h2><p>Son beneficios esperados del modelo, no resultados demostrados.</p></div><div class="benefit-grid"><div>✓ Facilitar la comunicación ciudadana</div><div>✓ Organizar la información sobre problemas</div><div>✓ Consultar el estado de los reportes</div><div>✓ Identificar zonas que requieren atención</div><div>✓ Promover la participación ciudadana</div></div></div>
+      <div class="container safety-note"><strong>Prevención de duplicados y reportes falsos:</strong> el prototipo valida campos, avisa de posibles duplicados, genera códigos únicos y bloquea el doble envío mientras procesa. Estas medidas no verifican la identidad ni impiden todos los reportes falsos; una protección robusta requiere servidor y coordinación institucional.</div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contacto">
+    <div class="container footer-grid">
+      <div><a class="brand footer-brand" href="#inicio"><svg class="brand-logo" viewBox="0 0 64 64" aria-hidden="true"><circle cx="27" cy="26" r="19" fill="#e8f4ff" stroke="#8ec5f3" stroke-width="5"/><path d="M40 40 55 55" stroke="#55c78c" stroke-width="7" stroke-linecap="round"/><path d="M14 35V25h7v10M23 35V17h8v18M33 35V23h7v12" fill="#55c78c" stroke="#8ec5f3" stroke-width="1.5"/></svg><span>Reporte <strong>Ciudadano</strong></span></a><p>Una herramienta para escuchar, registrar y visibilizar problemas urbanos.</p></div>
+      <div><h3>Explora</h3><a href="#como-funciona">Cómo funciona</a><a href="#problemas">Tipos de problemas</a><a href="#seguimiento">Seguimiento</a></div>
+      <div><h3>Participa</h3><button class="footer-action" data-open-report>Crear un reporte</button><a href="#perfil">Mi perfil local</a><a href="https://wa.me/59172981122?text=Hola%2C%20quiero%20obtener%20informaci%C3%B3n%20sobre%20Reporte%20Ciudadano." target="_blank" rel="noopener">Contacto por WhatsApp ↗</a></div>
+    </div>
+    <div class="container footer-bottom"><span>© <span id="year"></span> Reporte Ciudadano · Prototipo demostrativo</span><span>Privacidad: los datos se guardan solo en este navegador.</span></div>
+    <div class="container footer-disclaimer">Prototipo no conectado a una base de datos institucional. No ingreses información sensible.</div>
+  </footer>
+
+  <dialog id="reportDialog" class="report-dialog" aria-labelledby="dialogTitle">
+    <div class="dialog-head"><div><p class="eyebrow">TU REPORTE</p><h2 id="dialogTitle">Reportar un problema</h2></div><button type="button" class="icon-button" id="closeDialog" aria-label="Cerrar formulario">×</button></div>
+    <form id="reportForm">
+      <div class="form-grid">
+        <div class="form-field"><label for="reportName">Nombre completo <span class="required">*</span></label><input id="reportName" name="name" required maxlength="100" autocomplete="name"><small class="error" id="nameError"></small></div>
+        <div class="form-field"><label for="reportPhone">Teléfono de contacto</label><input id="reportPhone" name="phone" maxlength="30" autocomplete="tel" inputmode="tel"><small class="error" id="phoneError"></small></div>
+        <div class="form-field full"><label for="reportCategory">Tipo de problema <span class="required">*</span></label><select id="reportCategory" name="category" required><option value="">Selecciona una categoría</option></select><small class="error" id="categoryError"></small></div>
+        <div class="form-field full"><label for="reportDescription">Descripción detallada <span class="required">*</span></label><textarea id="reportDescription" name="description" required minlength="10" maxlength="1500" rows="4" placeholder="Explica qué ocurre, desde cuándo y cómo afecta a la zona."></textarea><small class="error" id="descriptionError"></small></div>
+        <div class="form-field full"><label for="reportLocation">Ubicación <span class="required">*</span></label><input id="reportLocation" name="location" required maxlength="250" placeholder="Calle, barrio, referencia o punto cercano"><button type="button" class="btn btn-outline btn-location" id="useLocation">◎ Usar mi ubicación</button><small class="field-hint" id="locationMessage" aria-live="polite"></small><small class="error" id="locationError"></small></div>
+        <div class="form-field full"><label for="reportPhoto">Fotografía (opcional)</label><input id="reportPhoto" name="photo" type="file" accept="image/*"><small class="field-hint" id="photoName">No se enviará automáticamente por WhatsApp; podrás adjuntarla manualmente.</small></div>
+      </div>
+      <div class="date-stamp">Fecha de registro: <strong id="registrationDate"></strong></div>
+      <p class="privacy-hint">Al registrar, el reporte se guardará en este navegador y se preparará un mensaje de WhatsApp. Evita incluir datos personales sensibles.</p>
+      <button class="btn btn-submit" id="submitReport" type="submit">Registrar reporte</button>
+      <div id="reportFeedback" class="report-feedback" aria-live="polite"></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
